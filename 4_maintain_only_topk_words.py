@@ -187,31 +187,41 @@ def get_maintain_only_results(model,model_name,filter_data,words_list,all_att_li
         #     percentage_in_CoT=value_sum/sum(all_att_list[i][input_len:(input_len+CoT_len)])
         # 只保留topk keywords       
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(replace_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
-        record_list.append({'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
+        record_list.append({'sample_index':i,'question':filter_data[i]['question'],
+                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all,
                     'att/grad_in_CoT':percentage_in_CoT,'att/grad_value':value_sum})
         #保留全部rest
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(rest_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
-        record_list_all_rest.append({'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
+        record_list_all_rest.append({'sample_index':i,'question':filter_data[i]['question'],
+                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_rest,
                     'att/grad_in_CoT':percentage_in_CoT_rest,'att/grad_value':value_sum_rest})
         #保留sampled rest
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(sampled_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
-        record_list_sampled_rest.append({'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
+        record_list_sampled_rest.append({'sample_index':i,'question':filter_data[i]['question'],
+                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_sampled,
                     'att/grad_in_CoT':percentage_in_CoT_sampled,'att/grad_value':value_sum_sampled})
         #保留low attention words
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(low_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
-        record_list_low.append({'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
+        record_list_low.append({'sample_index':i,'question':filter_data[i]['question'],
+                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_low,
                     'att/grad_in_CoT':percentage_in_CoT_low,'att/grad_value':value_sum_low})
         #保留sampled all words
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(sampled_all_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
-        record_list_sampled_all.append({'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
+        record_list_sampled_all.append({'sample_index':i,'question':filter_data[i]['question'],
+                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_sampled_all,
                     'att/grad_in_CoT':percentage_in_CoT_sampled_all,'att/grad_value':value_sum_sampled_all})
