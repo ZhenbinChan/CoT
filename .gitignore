@@ -146,4 +146,4 @@ tsne_data/
 umap*
 analysis_pictures/
 metric_pictures/
-
+origin_topk_result/
