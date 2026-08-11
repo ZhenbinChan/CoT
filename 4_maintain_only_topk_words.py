@@ -188,7 +188,9 @@ def get_maintain_only_results(model,model_name,filter_data,words_list,all_att_li
         # 只保留topk keywords       
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(replace_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
         record_list.append({'sample_index':i,'question':filter_data[i]['question'],
-                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'original_CoT':filter_data[i]['CoT'],
+                    'original_explanation':filter_data[i]['output_text'],
+                    'original_answer':filter_data[i]['prediction'],'modified_CoT':think_text,
                     'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all,
@@ -196,7 +198,9 @@ def get_maintain_only_results(model,model_name,filter_data,words_list,all_att_li
         #保留全部rest
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(rest_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
         record_list_all_rest.append({'sample_index':i,'question':filter_data[i]['question'],
-                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'original_CoT':filter_data[i]['CoT'],
+                    'original_explanation':filter_data[i]['output_text'],
+                    'original_answer':filter_data[i]['prediction'],'modified_CoT':think_text,
                     'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_rest,
@@ -204,7 +208,9 @@ def get_maintain_only_results(model,model_name,filter_data,words_list,all_att_li
         #保留sampled rest
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(sampled_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
         record_list_sampled_rest.append({'sample_index':i,'question':filter_data[i]['question'],
-                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'original_CoT':filter_data[i]['CoT'],
+                    'original_explanation':filter_data[i]['output_text'],
+                    'original_answer':filter_data[i]['prediction'],'modified_CoT':think_text,
                     'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_sampled,
@@ -212,7 +218,9 @@ def get_maintain_only_results(model,model_name,filter_data,words_list,all_att_li
         #保留low attention words
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(low_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
         record_list_low.append({'sample_index':i,'question':filter_data[i]['question'],
-                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'original_CoT':filter_data[i]['CoT'],
+                    'original_explanation':filter_data[i]['output_text'],
+                    'original_answer':filter_data[i]['prediction'],'modified_CoT':think_text,
                     'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_low,
@@ -220,7 +228,9 @@ def get_maintain_only_results(model,model_name,filter_data,words_list,all_att_li
         #保留sampled all words
         think_text,output_text_wo_think,model_prediction,correct,replace_text=get_maintain_results(sampled_all_words,filter_data[i]['all_output_text'],filter_data[i]['truth'],mask_flag)
         record_list_sampled_all.append({'sample_index':i,'question':filter_data[i]['question'],
-                    'original_CoT':filter_data[i]['CoT'],'modified_CoT':think_text,
+                    'original_CoT':filter_data[i]['CoT'],
+                    'original_explanation':filter_data[i]['output_text'],
+                    'original_answer':filter_data[i]['prediction'],'modified_CoT':think_text,
                     'CoT':think_text,'output_text':output_text_wo_think,'prediction':model_prediction,'truth':filter_data[i]['truth'],
                     'correct':correct,'previous_prediction':filter_data[i]['prediction'],
                     'input_text_with_CoT':replace_text,'att/grad_in_all':percentage_in_all_sampled_all,
