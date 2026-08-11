@@ -446,7 +446,7 @@ if __name__=='__main__':
     att_flag_list=[True]
     both_flag_list=[False]
     filter_flag=True
-    REMOVE_LAST_TWO_SENTENCES=False
+    REMOVE_LAST_TWO_SENTENCES=True
     if REMOVE_LAST_TWO_SENTENCES:
         logging.warning(
             "REMOVE_LAST_TWO_SENTENCES=True: 将覆盖原路径中的同名实验结果。"

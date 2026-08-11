@@ -125,7 +125,8 @@ def init():
         1: 'DeepSeek-R1-Distill-Llama-8B',
         2: 'Qwen3-8B',
         3: 'Qwen3-4B',
-        4: 'Qwen3-0.6B'
+        4: 'Qwen3-0.6B',
+        5: 'Llama-3.1-8B-Instruct'
     }
 
     # =====================================================
@@ -157,7 +158,7 @@ def init():
         model_path = args.model_path
     else:
         model_path = (
-            f"/2024133105/Workspaces/llms/"
+            f"/share/nlp/chenzhenbin/Workspaces/LLMs/"
             f"{model_name}"
         )
 

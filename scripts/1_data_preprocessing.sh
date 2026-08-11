@@ -1,23 +1,13 @@
 #!/usr/bin/env bash
 
-if [ -z "${BASH_VERSION:-}" ]; then
-  exec bash "$0" "$@"
-fi
-
-set -euo pipefail
-
-# Batch data preprocessing for MMLU-Redux.
-# It runs 1_prepare_dataset.py for each subset and creates:
-#   results/${DATA_NAME}/${MODEL_NAME}_${subset}_filter_right.json
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${PROJECT_ROOT}"
 
-DATA_NAME="${DATA_NAME:-mmlu_redux}"
-MODEL_NAME="${MODEL_NAME:-Qwen3-8B}"
-HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
-SKIP_EXISTING="${SKIP_EXISTING:-1}"
+DATA_NAME="mmlu_redux"
+MODEL_NAME="Llama-3.1-8B-Instruct"
+HF_ENDPOINT="https://hf-mirror.com"
+SKIP_EXISTING="1"
 
 export HF_ENDPOINT
 
@@ -72,7 +62,7 @@ for subset in "${SUBSETS[@]}"; do
   echo "[Run] ${subset}"
   echo "------------------------------------------------------------"
 
-  python3 1_prepare_dataset.py \
+CUDA_VISIABLE_DEVICES=1  python3 1_prepare_dataset.py \
     --data_name "${DATA_NAME}" \
     --sub_set "${subset}" \
     --model_name "${MODEL_NAME}"
