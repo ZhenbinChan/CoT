@@ -47,11 +47,10 @@ bash -n scripts/*.sh
 
 Git history currently uses minimal messages like `first commit`; prefer clearer imperative summaries such as `Add Qwen3 preprocessing script` or `Fix sentence attention aggregation`. Pull requests should describe the experiment stage affected, list commands run, note model/subset choices, and mention any large generated outputs intentionally changed.
 
-## Security & Configuration Tips
-
-Do not add API keys or tokens to source files. Move credentials currently needed by API calls into environment variables before sharing changes. Verify local model paths under `/2024133105/Workspaces/llms` before launching long GPU jobs.
-
 
 # Testing principles
 1. ```conda activate cot``` to activate the environment
 2. run the script
+
+# NOTE
+1. Please do not make changes in the codex workspace; apply the updates directly to my project folder.
