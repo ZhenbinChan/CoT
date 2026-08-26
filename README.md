@@ -594,3 +594,220 @@ python 3_get_attention_after_replacing.py \
 - attention 排名与模型自选内容的对齐程度。
 
 因此，最终科研结论应结合 attention 指标和干预后的答案变化共同给出。
+
+## 12. CoT Case Analysis Experiments
+
+这组 case analysis 是独立于现有 v1–v4 的新实验链路。它不会修改旧脚本，也不会覆盖旧结果，默认输出到 `final_results/case_study/`。三个研究问题分别是：
+
+1. 不提供 CoT 时，模型仅凭题目本身能达到多高的准确率？
+2. 保留 10%、20%、30% 高 attention 内容带来的增益，有多少来自答案字母、正确选项词或选项位置泄漏？
+3. 人工删除或反事实修改 CoT 中的线索后，答案及答案置信度如何变化？
+
+所有新实验使用完全相同的答案读取协议：prompt 以 `\boxed{` 结尾，关闭采样，最多生成 8 tokens，不允许模型重新生成 explanation。准确率以实际生成并解析出的 `prediction` 计算。
+
+### 12.1 公共输入和概率字段
+
+No-CoT 和 Top-k 实验读取：
+
+```text
+results/{data_name}/{model_name}_{subset}_filter_right.json
+```
+
+Top-k 还读取：
+
+```text
+results/{data_name}/att_grad_before/
+├── {model_name}_{subset}_rate1_all_att_list.json
+└── {model_name}_{subset}_rate1_words_list.json
+```
+
+如果这两个 attention 文件不存在，Top-k 启动脚本会先调用 `get_att.py`。新 runner 会严格检查 filter、attention 和 words 的样本数以及每条样本的 word 数；任何错位都会立即报错，而不会继续产生不可解释的结果。
+
+每条预测同时保存 `\boxed{` 后第一个 token 位置的 A/B/C/D 概率：
+
+- `option_probabilities_raw`：四个字母在完整模型词表 softmax 中的原始概率；四项之和通常小于 1。
+- `option_probabilities_normalized`：只在 A/B/C/D 四项内部重新归一化后的概率；四项之和为 1。
+- `option_probability_mass`：四个原始概率之和。
+- `option_argmax_prediction`：四项归一化概率的最大项，仅用于和生成答案做一致性检查。
+- `truth_probability_raw` 和 `truth_probability_normalized`：正确标签对应的两种概率。
+- `option_top1_probability` 和 `option_top1_top2_margin`：四项内部 top-1 置信度及 top-1/top-2 间隔。
+
+### 12.2 No-CoT direct-answer baseline
+
+`13_no_cot_direct_answer.py` 完全忽略原始 CoT 和 explanation，实际输入为：
+
+```text
+sample["input_text"] + " \\boxed{"
+```
+
+每个 subset 只产生一份 baseline，不会人为复制成 0.1/0.2/0.3 三份。运行一个指定 subset：
+
+```bash
+DATA_NAME=mmlu_redux \
+MODEL_NAME=Qwen3-8B \
+MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/4_no_cot_direct_answer.sh global_facts
+```
+
+不传 subset 时，会自动发现当前 `DATA_NAME` 和 `MODEL_NAME` 的全部 `*_filter_right.json`：
+
+```bash
+MODEL_NAME=Qwen3-8B MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/4_no_cot_direct_answer.sh
+```
+
+输出结构为：
+
+```text
+final_results/case_study/no_cot/{data_name}/{model_name}/
+├── {subset}/
+│   ├── records.json
+│   ├── good_cases.json
+│   ├── bad_cases.json
+│   └── summary.json
+├── aggregate_summary.json
+└── aggregate_summary.csv
+```
+
+`sample_index` 用于和后续三个 ratio 的相同样本对齐。
+
+### 12.3 五个 Top-k 答案泄漏条件
+
+`14_topk_answer_leakage.py` 是五个条件共享的 Python runner。每个启动脚本只运行一个固定条件，并在同一次模型加载中依次运行 0.1、0.2、0.3：
+
+```bash
+MODEL_NAME=Qwen3-8B MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/5-1_topk_letter_kept.sh global_facts
+
+MODEL_NAME=Qwen3-8B MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/5-2_topk_letter_removed.sh global_facts
+
+MODEL_NAME=Qwen3-8B MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/5-3_topk_correct_option_words_removed.sh global_facts
+
+MODEL_NAME=Qwen3-8B MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/5-4_topk_permuted_letter_kept.sh global_facts
+
+MODEL_NAME=Qwen3-8B MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/5-5_topk_permuted_letter_removed.sh global_facts
+```
+
+五个条件的精确定义如下：
+
+- `letter_kept`：不删除 A/B/C/D 标签，直接在完整候选中保留高 attention 内容。
+- `letter_removed`：先删除 `A.`、`(B)`、`**C**` 等独立选项标签，再根据清洗后的候选数重新计算 k。`According`、`Data` 等普通词不会因为包含字母 A/B/C/D 而被删除。
+- `correct_option_words_removed`：先执行 `letter_removed`，再从正确选项文本提取小写、Unicode/标点规范化且去除英文停词后的词和数字，在 CoT 与 explanation 中进行完整词匹配并删除，最后重新计算 k。
+- `permuted_letter_kept`：使用与 `letter_kept` 相同的 retained CoT，不重新计算 attention；只重排选项文本并更新 prompt 和 truth。
+- `permuted_letter_removed`：使用与 `letter_removed` 相同的 retained CoT，再执行相同的选项文本置换。
+
+置换不是把标签名称改掉。A/B/C/D 仍按正常顺序显示，变化的是标签后面的选项文本。例如：
+
+```text
+原始：A. apple   B. banana   C. cherry   D. date，truth=B
+置换：A. cherry  B. date     C. banana   D. apple，truth=C
+```
+
+prompt 中四个选项块和 truth 必须同步更新，retained CoT 保持逐字不变。每条样本使用 `Random(51 + sample_index)` 得到一次固定非原序置换，并保证正确选项移动到不同字母。选项块无法唯一定位时实验会立即失败。置换条件会在置换后的题目上额外重算一次 No-CoT 参照，从而保证置信度 delta 比较的是同一 prompt 和同一 truth。
+
+新实验的候选范围包括完整 CoT 和 `</think>` 到 `\boxed` 之间的 explanation，明确关闭 v4 的“自动删除最后两句”逻辑。每个 ratio 使用 `round(candidate_count * ratio)`。记录中保存筛选前后候选数、目标/实际 k、全局位置、词、attention、segment、删除原因和实际保留比例。
+
+置换与正确选项词清洗以 `input_text` 中模型实际看到的 A/B/C/D 选项块为准，同时将原始 `choices` 字段保存在 `source_choices_field`。这是为了兼容旧数据中选项本身含 `|` 或 `||`、但早期预处理按 `|` 切分而导致 prompt 与序列化字段不一致的情况；新实验不会静默把题目换成模型当时没有看到的版本。
+
+Top-k 输出为：
+
+```text
+final_results/case_study/topk_leakage/{data_name}/{model_name}/
+├── {subset}/{condition}/
+│   ├── top_percentage0.1.json
+│   ├── top_percentage0.1_good_cases.json
+│   ├── top_percentage0.1_bad_cases.json
+│   ├── top_percentage0.1_summary.json
+│   └── 对应 0.2、0.3 文件
+├── {condition}_aggregate_summary.json
+└── {condition}_aggregate_summary.csv
+```
+
+普通 Top-k 条件会按 `sample_index` 读取已经生成的 No-CoT records，并保存 prediction、correct、truth probability 相对 No-CoT 的变化。若 No-CoT 文件不存在，实验仍可运行，但这些 delta 字段为 `null`，因此建议先运行 No-CoT baseline。
+
+### 12.4 人工 CoT 干预
+
+`15_manual_cot_intervention.py` 接收只读 JSON。每个 case 可以包含多个修改版本：
+
+```json
+[
+  {
+    "case_id": "global_facts_0001",
+    "data_name": "mmlu_redux",
+    "model_name": "Qwen3-8B",
+    "subset": "global_facts",
+    "sample_index": 0,
+    "base_input_text": "完整原始题目 prompt",
+    "truth": "C",
+    "baseline": {
+      "cot": "原始或保留后的 CoT",
+      "explanation": "原始或保留后的 explanation"
+    },
+    "variants": [
+      {
+        "variant_id": "minimal_scrub",
+        "cot": "人工删除答案线索后的 CoT",
+        "explanation": "人工修改后的 explanation",
+        "edit_note": "removed direct answer clues"
+      },
+      {
+        "variant_id": "counterfactual",
+        "cot": "人工反事实修改后的 CoT",
+        "explanation": "人工修改后的 explanation",
+        "edit_note": "changed answer-bearing number"
+      }
+    ]
+  }
+]
+```
+
+运行方式：
+
+```bash
+INPUT_FILE=path/to/manual_cases.json \
+RUN_NAME=minimal_scrub_study \
+MODEL_NAME=Qwen3-8B \
+MODEL_PATH=/path/to/Qwen3-8B \
+bash scripts/6_manual_cot_intervention.sh
+```
+
+baseline 和所有 variants 都会重新预测，不沿用旧 prediction。若旧记录缺少 `base_input_text`，可以提供 `input_text_with_CoT`；脚本只在其中恰好存在一个 `<think>` 时提取其前缀，否则明确报错。输入文件本身不会被修改。
+
+输出位于：
+
+```text
+final_results/case_study/manual/{data_name}/{model_name}/{run_name}/
+```
+
+其中包含嵌套 `records.json`、baseline/variant 的 records 与 good/bad cases、`improved_cases.json`、`degraded_cases.json` 和 `summary.json`。`by_variant/{variant_id}/` 还会分别保存每个修改类型的 records、good、bad、improved、degraded 和 summary。summary 给出修改前后准确率、accuracy delta、平均 truth-probability delta、`wrong→correct`、`correct→wrong` 以及答案 changed/unchanged 数量。
+
+### 12.5 通用启动参数和结果读取
+
+启动脚本支持以下环境变量：
+
+```text
+DATA_NAME      数据集名（默认 mmlu_redux）
+MODEL_NAME     结果文件中的模型名
+MODEL_PATH     本地模型路径
+OUTPUT_ROOT    输出根目录（默认 ./final_results/case_study）
+CUDA_VISIBLE_DEVICES  可见 GPU（默认 0）
+PYTHON_BIN     Python 命令（默认 python）
+MAX_SAMPLES    可选的小样本 smoke test 数量
+SKIP_EXISTING  No-CoT/Top-k 中设为 1 时跳过完整已有输出
+SUBSETS        可选的空格分隔 subset；也可直接作为 shell 位置参数传入
+```
+
+建议分析时同时查看：
+
+1. `records` 中的生成答案变化；
+2. good/bad case 的样本级内容；
+3. `truth_probability_normalized` 的变化，即使答案字母没有改变；
+4. subset summary 和 aggregate summary 的 micro accuracy。
+
+跨 subset 的 `micro accuracy` 按所有 subset 的正确样本总数除以总样本数计算，不是各 subset accuracy 的简单平均。
+
+当前仓库已有本地产物主要来自 Qwen3。新脚本没有写死 Qwen3 模型名，并沿用项目统一 loader，因此 DeepSeek-R1 等模型可以使用相同 CLI；但在没有对应本地模型和产物的机器上，不能把接口兼容解释为已经完成实测。
