@@ -1,0 +1,38 @@
+[
+    {
+        "case_id": "global_facts_0000_letter_removed_p10",
+        "data_name": "mmlu_redux",
+        "model_name": "Qwen3-8B",
+        "subset": "global_facts",
+        "sample_index": 0,
+        "source_condition": "letter_removed",
+        "source_ratio": 0.1,
+        "source_record_file": "final_results/case_study/topk_leakage/mmlu_redux/Qwen3-8B/global_facts/letter_removed/top_percentage0.1.json",
+        "base_input_text": "<|im_start|>user\n\n    Controlling for inflation and PPP-adjustment, about how much did GDP per capita increase from 1950 to 2016 in Japan?\n    Please tell me the option of the correct answer, display only the option letters and put it in \\boxed{} in the answer field, for example, \"answer\": \"\\boxed{C}\": \n    A. by 5 fold\n    B. by 10 fold\n    C. by 15 fold\n    D. by 20 fold\n    <|im_end|>\n<|im_start|>assistant\n",
+        "truth": "C",
+        "baseline": {
+            "cot": "Okay, through 5x, 10x, etc. the the the the the option (by 15-fold), (15) (10). 2016, 3000*(1.05)^66. the (20x). the $38,000. (15fold). the $38,000. the exactly, A-D, 15-fold, others. Therefore, choice the be (by 15 fold), 12.6 15 10. intended.",
+            "explanation": "To determine **GDP capita** **1950 2016**, (PPP)**, conditions. --- ### Considerations: (i.e., the **Timeframe**: 2016. --- Points: post-WWII, the growth. indicators. (IMF)**, span: 1950:** **\\$3,000** 2016:** **\\$38,000** **multiplication 12.6**. --- ### Matching Against Options: the above, the appropriate response the listed options is: - by 5 fold** – - 10 fold** Underestimates - by 15 fold** matches the 12.6× - 20 fold** Overstates the While the figure below 15, **option aligns best with the expected range when rounded appropriately. --- ### Final Answer: $$"
+        },
+        "variants": [
+            {
+                "variant_id": "correct_option_terms_removed",
+                "cot": "Okay, compare the available magnitudes. In 2016 the value is about $38,000, and the estimated ratio is 12.6. Therefore, choose the option closest to that ratio.",
+                "explanation": "The PPP-adjusted estimates are about $3,000 in 1950 and $38,000 in 2016. Their ratio is approximately 12.6. Compare this value with the available choices.",
+                "edit_note": "Removed every occurrence of the correct option terms '15' and 'fold', while retaining the numerical evidence and reasoning."
+            },
+            {
+                "variant_id": "all_answer_clues_removed",
+                "cot": "Use the PPP-adjusted values for 1950 and 2016 and compare their ratio.",
+                "explanation": "The relevant estimates are about $3,000 in 1950 and $38,000 in 2016. Divide the later value by the earlier value and compare the result with the choices.",
+                "edit_note": "Removed option labels, option values, the computed ratio, and the final conclusion; retained only the evidence needed to recompute the answer."
+            },
+            {
+                "variant_id": "counterfactual_evidence",
+                "cot": "Use the PPP-adjusted values for 1950 and 2016 and compare their ratio.",
+                "explanation": "Assume the relevant estimates are about $3,000 in 1950 and $60,000 in 2016. The later value is about 20 times the earlier value. Compare this result with the choices.",
+                "edit_note": "Counterfactually changed the 2016 value so that the reasoning supports the 20-fold option."
+            }
+        ]
+    }
+]
